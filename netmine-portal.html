@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netmine - WiFi Payment Portal</title>
+    <meta name="description" content="Secure WiFi access portal with MPesa payment integration. Choose from flexible internet plans and connect instantly.">
+    
+    <!-- Material Design Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Safaricom Green */
+            --primary: hsl(142, 76%, 36%);
+            --primary-light: hsl(142, 76%, 46%);
+            --primary-dark: hsl(142, 76%, 26%);
+            
+            /* Firebase Orange */
+            --accent: hsl(24, 100%, 50%);
+            --accent-light: hsl(24, 100%, 60%);
+            
+            /* Material Design Colors */
+            --background: hsl(210, 20%, 98%);
+            --surface: hsl(0, 0%, 100%);
+            --on-surface: hsl(200, 15%, 8%);
+            --on-primary: hsl(0, 0%, 100%);
+            --border: hsl(142, 20%, 90%);
+            --shadow: 0 2px 8px -2px hsla(142, 76%, 36%, 0.1);
+            --shadow-lg: 0 10px 25px -5px hsla(142, 76%, 36%, 0.15);
+            
+            /* Success/Error */
+            --success: hsl(142, 76%, 36%);
+            --error: hsl(0, 84%, 60%);
+            --warning: hsl(45, 93%, 47%);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, hsl(142, 76%, 36%), hsl(142, 76%, 46%));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--surface);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: var(--on-primary);
+            padding: 32px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: var(--surface);
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px hsla(0, 0%, 0%, 0.1);
+        }
+
+        .logo .material-icons {
+            font-size: 40px;
+            color: var(--primary);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .plan-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .plan-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .plan-card.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, hsl(142, 76%, 98%), hsl(142, 76%, 96%));
+        }
+
+        .plan-card.selected::before {
+            transform: scaleX(1);
+        }
+
+        .plan-duration {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--on-surface);
+            margin-bottom: 8px;
+        }
+
+        .plan-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .plan-features {
+            list-style: none;
+            font-size: 0.9rem;
+            color: hsl(200, 15%, 40%);
+        }
+
+        .plan-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .plan-features .material-icons {
+            font-size: 16px;
+            color: var(--success);
+            margin-right: 8px;
+        }
+
+        .payment-section {
+            border-top: 1px solid var(--border);
+            padding-top: 32px;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: var(--on-primary);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px hsla(142, 76%, 36%, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: hsla(0, 0%, 0%, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 400px;
+            width: 100%;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--on-surface);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--on-surface);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            box-shadow: none;
+        }
+
+        /* Status Styles */
+        .status {
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: hsl(142, 76%, 95%);
+            color: var(--success);
+            border: 1px solid hsl(142, 76%, 80%);
+        }
+
+        .status.error {
+            background: hsl(0, 84%, 95%);
+            color: var(--error);
+            border: 1px solid hsl(0, 84%, 80%);
+        }
+
+        .status.warning {
+            background: hsl(45, 93%, 95%);
+            color: var(--warning);
+            border: 1px solid hsl(45, 93%, 80%);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+                border-radius: 16px;
+            }
+            
+            .header, .content {
+                padding: 24px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <span class="material-icons">wifi</span>
+            </div>
+            <h1>Netmine</h1>
+            <p>Secure WiFi Payment Portal</p>
+        </div>
+
+        <div class="content">
+            <div class="plans-grid" id="plansGrid">
+                <!-- Plans will be generated by JavaScript -->
+            </div>
+
+            <div class="payment-section">
+                <button class="btn" id="payButton" disabled>
+                    <span class="material-icons">payment</span>
+                    Pay with M-Pesa
+                </button>
+                <div id="statusContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>M-Pesa Payment</h3>
+                <p>Enter your phone number to receive payment prompt</p>
+            </div>
+            
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label class="form-label">Selected Plan</label>
+                    <div id="selectedPlanInfo" style="padding: 12px; background: hsl(142, 76%, 96%); border-radius: 8px; font-weight: 500;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" class="form-input" placeholder="+254 7XX XXX XXX" required>
+                </div>
+                
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" id="cancelPayment">Cancel</button>
+                    <button type="submit" class="btn" id="confirmPayment">
+                        <span class="material-icons">send</span>
+                        Send Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const MPESA_CONFIG = {
+            consumerKey: 'nLuyXezRJgm3fpxYDCjQE1vxLo4cz4Y9tSV3tdZAhjRl7pGT',
+            consumerSecret: '7LrWGPDLkLg7FPcJHgq8OZjVEoE1AnuLEUzq6TTX6nBw3TxqNf9qz6dPnqm3udRa',
+            environment: 'sandbox', // Change to 'live' for production
+            shortCode: '174379',
+            passkey: 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
+        };
+
+        // WiFi Plans Data
+        const wifiPlans = [
+            { duration: '1 Hour', price: 5, features: ['Basic speed', 'Single device', 'No download limit'] },
+            { duration: '4 Hours', price: 20, features: ['Standard speed', 'Single device', 'No download limit'] },
+            { duration: '6 Hours', price: 30, features: ['Standard speed', 'Single device', 'No download limit'] },
+            { duration: '1 Day', price: 40, features: ['High speed', 'Multiple devices', 'No download limit'] },
+            { duration: '2 Days', price: 90, features: ['High speed', 'Multiple devices', 'No download limit'] },
+            { duration: '3 Days', price: 120, features: ['High speed', 'Multiple devices', 'Priority support'] },
+            { duration: '1 Week', price: 400, features: ['Premium speed', 'Multiple devices', 'Priority support'] },
+            { duration: '2 Weeks', price: 600, features: ['Premium speed', 'Multiple devices', 'Priority support'] },
+            { duration: '4 Weeks', price: 1000, features: ['Premium speed', 'Multiple devices', 'Premium support'] }
+        ];
+
+        // Global state
+        let selectedPlan = null;
+        let accessToken = null;
+
+        // DOM Elements
+        const plansGrid = document.getElementById('plansGrid');
+        const payButton = document.getElementById('payButton');
+        const paymentModal = document.getElementById('paymentModal');
+        const paymentForm = document.getElementById('paymentForm');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const selectedPlanInfo = document.getElementById('selectedPlanInfo');
+        const statusContainer = document.getElementById('statusContainer');
+        const cancelPaymentBtn = document.getElementById('cancelPayment');
+        const confirmPaymentBtn = document.getElementById('confirmPayment');
+
+        // Initialize the application
+        function init() {
+            renderPlans();
+            setupEventListeners();
+            formatPhoneNumber();
+        }
+
+        // Render WiFi plans
+        function renderPlans() {
+            plansGrid.innerHTML = wifiPlans.map((plan, index) => `
+                <div class="plan-card" data-plan-index="${index}">
+                    <div class="plan-duration">${plan.duration}</div>
+                    <div class="plan-price">KSh ${plan.price}</div>
+                    <ul class="plan-features">
+                        ${plan.features.map(feature => `
+                            <li><span class="material-icons">check_circle</span>${feature}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `).join('');
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Plan selection
+            plansGrid.addEventListener('click', (e) => {
+                const planCard = e.target.closest('.plan-card');
+                if (planCard) {
+                    selectPlan(parseInt(planCard.dataset.planIndex));
+                }
+            });
+
+            // Payment button
+            payButton.addEventListener('click', openPaymentModal);
+
+            // Modal controls
+            cancelPaymentBtn.addEventListener('click', closePaymentModal);
+            paymentForm.addEventListener('submit', handlePayment);
+
+            // Close modal on backdrop click
+            paymentModal.addEventListener('click', (e) => {
+                if (e.target === paymentModal) {
+                    closePaymentModal();
+                }
+            });
+        }
+
+        // Format phone number input
+        function formatPhoneNumber() {
+            phoneNumberInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                
+                if (value.startsWith('254')) {
+                    value = value.substring(3);
+                } else if (value.startsWith('0')) {
+                    value = value.substring(1);
+                }
+                
+                if (value.length > 9) {
+                    value = value.substring(0, 9);
+                }
+                
+                if (value.length > 0) {
+                    value = '+254 ' + value.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3').trim();
+                }
+                
+                e.target.value = value;
+            });
+        }
+
+        // Select a plan
+        function selectPlan(index) {
+            // Remove previous selection
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Select new plan
+            const planCard = document.querySelector(`[data-plan-index="${index}"]`);
+            planCard.classList.add('selected');
+            
+            selectedPlan = { ...wifiPlans[index], index };
+            payButton.disabled = false;
+            
+            showStatus(`Selected: ${selectedPlan.duration} plan for KSh ${selectedPlan.price}`, 'success');
+        }
+
+        // Open payment modal
+        function openPaymentModal() {
+            if (!selectedPlan) return;
+            
+            selectedPlanInfo.innerHTML = `
+                <strong>${selectedPlan.duration}</strong><br>
+                <span style="color: var(--primary); font-size: 1.2em;">KSh ${selectedPlan.price}</span>
+            `;
+            
+            paymentModal.classList.add('active');
+            phoneNumberInput.focus();
+        }
+
+        // Close payment modal
+        function closePaymentModal() {
+            paymentModal.classList.remove('active');
+            paymentForm.reset();
+            confirmPaymentBtn.disabled = false;
+            confirmPaymentBtn.innerHTML = '<span class="material-icons">send</span>Send Payment';
+        }
+
+        // Handle payment submission
+        async function handlePayment(e) {
+            e.preventDefault();
+            
+            const phoneNumber = phoneNumberInput.value.replace(/\s/g, '');
+            
+            if (!phoneNumber.match(/^\+254\d{9}$/)) {
+                showStatus('Please enter a valid Kenyan phone number (+254XXXXXXXXX)', 'error');
+                return;
+            }
+
+            confirmPaymentBtn.disabled = true;
+            confirmPaymentBtn.innerHTML = '<div class="loading"></div>Processing...';
+
+            try {
+                // Get access token
+                await getAccessToken();
+                
+                // Initiate STK push
+                const result = await initiateSTKPush(phoneNumber);
+                
+                if (result.success) {
+                    showStatus('Payment request sent! Please check your phone and enter your M-Pesa PIN.', 'warning');
+                    closePaymentModal();
+                    
+                    // Start polling for payment status
+                    pollPaymentStatus(result.checkoutRequestID);
+                } else {
+                    throw new Error(result.message || 'Payment initiation failed');
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                showStatus(`Payment failed: ${error.message}`, 'error');
+                confirmPaymentBtn.disabled = false;
+                confirmPaymentBtn.innerHTML = '<span class="material-icons">send</span>Send Payment';
+            }
+        }
+
+        // Get M-Pesa access token
+        async function getAccessToken() {
+            const credentials = btoa(`${MPESA_CONFIG.consumerKey}:${MPESA_CONFIG.consumerSecret}`);
+            const baseURL = MPESA_CONFIG.environment === 'live' 
+                ? 'https://api.safaricom.co.ke' 
+                : 'https://sandbox.safaricom.co.ke';
+
+            const response = await fetch(`${baseURL}/oauth/v1/generate?grant_type=client_credentials`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Basic ${credentials}`
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.access_token) {
+                accessToken = data.access_token;
+                return data.access_token;
+            } else {
+                throw new Error('Failed to get access token');
+            }
+        }
+
+        // Initiate STK Push
+        async function initiateSTKPush(phoneNumber) {
+            const baseURL = MPESA_CONFIG.environment === 'live' 
+                ? 'https://api.safaricom.co.ke' 
+                : 'https://sandbox.safaricom.co.ke';
+
+            const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z/, '');
+            const password = btoa(`${MPESA_CONFIG.shortCode}${MPESA_CONFIG.passkey}${timestamp}`);
+
+            const payload = {
+                BusinessShortCode: MPESA_CONFIG.shortCode,
+                Password: password,
+                Timestamp: timestamp,
+                TransactionType: 'CustomerPayBillOnline',
+                Amount: selectedPlan.price,
+                PartyA: phoneNumber,
+                PartyB: MPESA_CONFIG.shortCode,
+                PhoneNumber: phoneNumber,
+                CallBackURL: 'https://your-callback-url.com/callback', // Replace with your actual callback URL
+                AccountReference: `Netmine-${selectedPlan.duration}`,
+                TransactionDesc: `WiFi Access - ${selectedPlan.duration}`
+            };
+
+            const response = await fetch(`${baseURL}/mpesa/stkpush/v1/processrequest`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            
+            if (data.ResponseCode === '0') {
+                return {
+                    success: true,
+                    checkoutRequestID: data.CheckoutRequestID
+                };
+            } else {
+                return {
+                    success: false,
+                    message: data.errorMessage || 'STK Push failed'
+                };
+            }
+        }
+
+        // Poll payment status (simplified - in production you'd use webhooks)
+        function pollPaymentStatus(checkoutRequestID) {
+            let attempts = 0;
+            const maxAttempts = 30; // 30 attempts = 2.5 minutes
+            
+            const pollInterval = setInterval(async () => {
+                attempts++;
+                
+                try {
+                    const status = await checkPaymentStatus(checkoutRequestID);
+                    
+                    if (status.ResultCode === '0') {
+                        clearInterval(pollInterval);
+                        handleSuccessfulPayment();
+                    } else if (status.ResultCode && status.ResultCode !== '1032') {
+                        // Payment failed (1032 means still pending)
+                        clearInterval(pollInterval);
+                        showStatus('Payment was cancelled or failed. Please try again.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Status check error:', error);
+                }
+                
+                if (attempts >= maxAttempts) {
+                    clearInterval(pollInterval);
+                    showStatus('Payment status check timed out. Please contact support if payment was deducted.', 'error');
+                }
+            }, 5000); // Check every 5 seconds
+        }
+
+        // Check payment status
+        async function checkPaymentStatus(checkoutRequestID) {
+            const baseURL = MPESA_CONFIG.environment === 'live' 
+                ? 'https://api.safaricom.co.ke' 
+                : 'https://sandbox.safaricom.co.ke';
+
+            const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z/, '');
+            const password = btoa(`${MPESA_CONFIG.shortCode}${MPESA_CONFIG.passkey}${timestamp}`);
+
+            const payload = {
+                BusinessShortCode: MPESA_CONFIG.shortCode,
+                Password: password,
+                Timestamp: timestamp,
+                CheckoutRequestID: checkoutRequestID
+            };
+
+            const response = await fetch(`${baseURL}/mpesa/stkpushquery/v1/query`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            return await response.json();
+        }
+
+        // Handle successful payment
+        function handleSuccessfulPayment() {
+            showStatus(`Payment successful! Activating ${selectedPlan.duration} WiFi access...`, 'success');
+            
+            // Simulate WiFi activation delay
+            setTimeout(() => {
+                enableWiFiAccess();
+            }, 2000);
+        }
+
+        // Enable WiFi access (integrate with MyPublicWiFi)
+        function enableWiFiAccess() {
+            // This is where you would integrate with MyPublicWiFi
+            // For now, we'll show a success message
+            showStatus('WiFi access activated! You can now browse the internet.', 'success');
+            
+            // In a real implementation, you would:
+            // 1. Get the user's MAC address from the captive portal
+            // 2. Call MyPublicWiFi API to grant access
+            // 3. Redirect to a success page or automatically connect
+            
+            // Example placeholder for MyPublicWiFi integration:
+            /*
+            try {
+                // Get MAC address from captive portal parameters
+                const macAddress = getMacAddressFromCaptivePortal();
+                
+                // Call your backend endpoint that communicates with MyPublicWiFi
+                await fetch('/api/grant-wifi-access', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        macAddress: macAddress,
+                        duration: selectedPlan.duration,
+                        amount: selectedPlan.price
+                    })
+                });
+                
+                // Redirect or show success page
+                window.location.href = '/success';
+            } catch (error) {
+                showStatus('WiFi activation failed. Please contact support.', 'error');
+            }
+            */
+        }
+
+        // Show status message
+        function showStatus(message, type = 'success') {
+            const statusEl = document.createElement('div');
+            statusEl.className = `status ${type}`;
+            
+            const icon = type === 'success' ? 'check_circle' : 
+                        type === 'error' ? 'error' : 'warning';
+            
+            statusEl.innerHTML = `
+                <span class="material-icons">${icon}</span>
+                ${message}
+            `;
+            
+            statusContainer.innerHTML = '';
+            statusContainer.appendChild(statusEl);
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.remove();
+                }, 5000);
+            }
+        }
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
