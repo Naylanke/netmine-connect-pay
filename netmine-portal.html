@@ -361,6 +361,128 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Confirmation Modal Styles */
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: hsla(0, 0%, 0%, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .confirmation-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .confirmation-content {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 20px 40px hsla(0, 0%, 0%, 0.15);
+        }
+
+        .confirmation-modal.active .confirmation-content {
+            transform: scale(1);
+        }
+
+        .confirmation-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+        }
+
+        .confirmation-icon.success {
+            background: linear-gradient(135deg, var(--success), hsl(142, 76%, 46%));
+            animation: successPulse 0.6s ease-out;
+        }
+
+        .confirmation-icon.error {
+            background: linear-gradient(135deg, var(--error), hsl(0, 84%, 70%));
+            animation: errorShake 0.6s ease-out;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .confirmation-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--on-surface);
+        }
+
+        .confirmation-message {
+            font-size: 1.1rem;
+            color: hsl(200, 15%, 40%);
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .confirmation-details {
+            background: hsl(142, 76%, 96%);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 32px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .confirmation-details h4 {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .confirmation-details p {
+            margin: 4px 0;
+            font-size: 0.95rem;
+        }
+
+        .confirmation-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), hsl(142, 76%, 46%));
+            color: white;
+        }
+
+        .btn-error {
+            background: linear-gradient(135deg, var(--error), hsl(0, 84%, 70%));
+            color: white;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .plans-grid {
@@ -376,8 +498,16 @@
                 padding: 24px;
             }
             
-            .btn-group {
+            .btn-group, .confirmation-actions {
                 flex-direction: column;
+            }
+
+            .confirmation-content {
+                padding: 32px 24px;
+            }
+
+            .confirmation-title {
+                font-size: 1.5rem;
             }
         }
     </style>
@@ -437,6 +567,50 @@
         </div>
     </div>
 
+    <!-- Success Confirmation Modal -->
+    <div class="confirmation-modal" id="successModal">
+        <div class="confirmation-content">
+            <div class="confirmation-icon success">
+                <span class="material-icons">check_circle</span>
+            </div>
+            <h2 class="confirmation-title">Payment Successful!</h2>
+            <p class="confirmation-message">Your M-Pesa payment has been processed successfully and your WiFi access has been activated.</p>
+            <div class="confirmation-details" id="successDetails">
+                <!-- Details will be populated by JavaScript -->
+            </div>
+            <div class="confirmation-actions">
+                <button class="btn btn-success" id="successContinue">
+                    <span class="material-icons">wifi</span>
+                    Start Browsing
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Confirmation Modal -->
+    <div class="confirmation-modal" id="errorModal">
+        <div class="confirmation-content">
+            <div class="confirmation-icon error">
+                <span class="material-icons">error</span>
+            </div>
+            <h2 class="confirmation-title">Payment Failed</h2>
+            <p class="confirmation-message" id="errorMessage">There was an issue processing your payment. Please try again or contact support if the problem persists.</p>
+            <div class="confirmation-details" id="errorDetails">
+                <!-- Details will be populated by JavaScript -->
+            </div>
+            <div class="confirmation-actions">
+                <button class="btn btn-secondary" id="errorTryAgain">
+                    <span class="material-icons">refresh</span>
+                    Try Again
+                </button>
+                <button class="btn btn-error" id="errorContactSupport">
+                    <span class="material-icons">support</span>
+                    Contact Support
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Configuration
         const MPESA_CONFIG = {
@@ -474,6 +648,16 @@
         const statusContainer = document.getElementById('statusContainer');
         const cancelPaymentBtn = document.getElementById('cancelPayment');
         const confirmPaymentBtn = document.getElementById('confirmPayment');
+        
+        // Confirmation modal elements
+        const successModal = document.getElementById('successModal');
+        const errorModal = document.getElementById('errorModal');
+        const successDetails = document.getElementById('successDetails');
+        const errorDetails = document.getElementById('errorDetails');
+        const errorMessage = document.getElementById('errorMessage');
+        const successContinueBtn = document.getElementById('successContinue');
+        const errorTryAgainBtn = document.getElementById('errorTryAgain');
+        const errorContactSupportBtn = document.getElementById('errorContactSupport');
 
         // Initialize the application
         function init() {
@@ -519,6 +703,33 @@
                 if (e.target === paymentModal) {
                     closePaymentModal();
                 }
+            });
+
+            // Confirmation modal controls
+            successContinueBtn.addEventListener('click', () => {
+                successModal.classList.remove('active');
+                // Redirect or auto-connect to WiFi
+                window.location.reload();
+            });
+
+            errorTryAgainBtn.addEventListener('click', () => {
+                errorModal.classList.remove('active');
+                openPaymentModal();
+            });
+
+            errorContactSupportBtn.addEventListener('click', () => {
+                errorModal.classList.remove('active');
+                // You can implement contact support functionality here
+                alert('Please contact support at: support@netmine.com or call +254 XXX XXX XXX');
+            });
+
+            // Close confirmation modals on backdrop click
+            [successModal, errorModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
             });
         }
 
@@ -709,7 +920,7 @@
                     } else if (status.ResultCode && status.ResultCode !== '1032') {
                         // Payment failed (1032 means still pending)
                         clearInterval(pollInterval);
-                        showStatus('Payment was cancelled or failed. Please try again.', 'error');
+                        showErrorConfirmation('Payment was cancelled or failed. Please try again.');
                     }
                 } catch (error) {
                     console.error('Status check error:', error);
@@ -717,7 +928,7 @@
                 
                 if (attempts >= maxAttempts) {
                     clearInterval(pollInterval);
-                    showStatus('Payment status check timed out. Please contact support if payment was deducted.', 'error');
+                    showErrorConfirmation('Payment status check timed out. Please contact support if payment was deducted.');
                 }
             }, 5000); // Check every 5 seconds
         }
@@ -762,9 +973,8 @@
 
         // Enable WiFi access (integrate with MyPublicWiFi)
         function enableWiFiAccess() {
-            // This is where you would integrate with MyPublicWiFi
-            // For now, we'll show a success message
-            showStatus('WiFi access activated! You can now browse the internet.', 'success');
+            // Show success confirmation modal
+            showSuccessConfirmation();
             
             // In a real implementation, you would:
             // 1. Get the user's MAC address from the captive portal
@@ -791,9 +1001,48 @@
                 // Redirect or show success page
                 window.location.href = '/success';
             } catch (error) {
-                showStatus('WiFi activation failed. Please contact support.', 'error');
+                showErrorConfirmation('WiFi activation failed. Please contact support if your payment was deducted.');
             }
             */
+        }
+
+        // Show success confirmation modal
+        function showSuccessConfirmation() {
+            const currentTime = new Date().toLocaleString('en-KE', {
+                timeZone: 'Africa/Nairobi',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            successDetails.innerHTML = `
+                <h4>Plan Details</h4>
+                <p><strong>Duration:</strong> ${selectedPlan.duration}</p>
+                <p><strong>Amount Paid:</strong> KSh ${selectedPlan.price}</p>
+                <p><strong>Activated:</strong> ${currentTime}</p>
+                <p><strong>Status:</strong> <span style="color: var(--success);">Active</span></p>
+            `;
+
+            statusContainer.innerHTML = '';
+            successModal.classList.add('active');
+        }
+
+        // Show error confirmation modal
+        function showErrorConfirmation(message = 'Payment was cancelled or failed. Please try again.') {
+            errorMessage.textContent = message;
+            
+            errorDetails.innerHTML = `
+                <h4>Transaction Details</h4>
+                <p><strong>Plan:</strong> ${selectedPlan.duration}</p>
+                <p><strong>Amount:</strong> KSh ${selectedPlan.price}</p>
+                <p><strong>Status:</strong> <span style="color: var(--error);">Failed</span></p>
+                <p><strong>Time:</strong> ${new Date().toLocaleString('en-KE', { timeZone: 'Africa/Nairobi' })}</p>
+            `;
+
+            statusContainer.innerHTML = '';
+            errorModal.classList.add('active');
         }
 
         // Show status message
