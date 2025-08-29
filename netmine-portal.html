@@ -818,7 +818,7 @@
                 }
             } catch (error) {
                 console.error('Payment error:', error);
-                showStatus(`Payment failed: ${error.message}`, 'error');
+                showErrorConfirmation(`Payment initiation failed: ${error.message}`);
                 confirmPaymentBtn.disabled = false;
                 confirmPaymentBtn.innerHTML = '<span class="material-icons">send</span>Send Payment';
             }
@@ -954,19 +954,19 @@
         }
 
         // Handle successful payment
-        function handleSuccessfulPayment() {
+        function handleSuccessfulPayment(paymentData = null) {
             showStatus(`Payment successful! Activating ${selectedPlan.duration} WiFi access...`, 'success');
             
             // Simulate WiFi activation delay
             setTimeout(() => {
-                enableWiFiAccess();
+                enableWiFiAccess(paymentData);
             }, 2000);
         }
 
         // Enable WiFi access (integrate with MyPublicWiFi)
-        function enableWiFiAccess() {
+        function enableWiFiAccess(paymentData = null) {
             // Show success confirmation modal
-            showSuccessConfirmation();
+            showSuccessConfirmation(paymentData);
             
             // In a real implementation, you would:
             // 1. Get the user's MAC address from the captive portal
@@ -976,8 +976,10 @@
             // Example placeholder for MyPublicWiFi integration:
             /*
             try {
-                // Get MAC address from captive portal parameters
-                const macAddress = getMacAddressFromCaptivePortal();
+                // Get MAC address from captive portal parameters or URL params
+                const urlParams = new URLSearchParams(window.location.search);
+                const macAddress = urlParams.get('mac') || 'unknown';
+                const userIP = urlParams.get('ip') || 'unknown';
                 
                 // Call your backend endpoint that communicates with MyPublicWiFi
                 await fetch('/api/grant-wifi-access', {
@@ -985,13 +987,17 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         macAddress: macAddress,
+                        userIP: userIP,
                         duration: selectedPlan.duration,
-                        amount: selectedPlan.price
+                        amount: selectedPlan.price,
+                        paymentReference: paymentData?.MpesaReceiptNumber || 'unknown'
                     })
                 });
                 
-                // Redirect or show success page
-                window.location.href = '/success';
+                // Redirect user to allowed URL or automatically connect
+                setTimeout(() => {
+                    window.location.href = 'http://www.google.com';
+                }, 3000);
             } catch (error) {
                 showErrorConfirmation('WiFi activation failed. Please contact support if your payment was deducted.');
             }
@@ -999,7 +1005,7 @@
         }
 
         // Show success confirmation modal
-        function showSuccessConfirmation() {
+        function showSuccessConfirmation(paymentData = null) {
             const currentTime = new Date().toLocaleString('en-KE', {
                 timeZone: 'Africa/Nairobi',
                 year: 'numeric',
@@ -1009,12 +1015,15 @@
                 minute: '2-digit'
             });
 
+            const receiptNumber = paymentData?.MpesaReceiptNumber || 'Processing...';
+
             successDetails.innerHTML = `
-                <h4>Plan Details</h4>
-                <p><strong>Duration:</strong> ${selectedPlan.duration}</p>
+                <h4>Payment Successful!</h4>
+                <p><strong>Plan:</strong> ${selectedPlan.duration}</p>
                 <p><strong>Amount Paid:</strong> KSh ${selectedPlan.price}</p>
+                <p><strong>Receipt Number:</strong> ${receiptNumber}</p>
                 <p><strong>Activated:</strong> ${currentTime}</p>
-                <p><strong>Status:</strong> <span style="color: var(--success);">Active</span></p>
+                <p><strong>WiFi Status:</strong> <span style="color: var(--success);">Active & Connected</span></p>
             `;
 
             statusContainer.innerHTML = '';
@@ -1026,15 +1035,34 @@
             errorMessage.textContent = message;
             
             errorDetails.innerHTML = `
-                <h4>Transaction Details</h4>
+                <h4>Transaction Failed</h4>
                 <p><strong>Plan:</strong> ${selectedPlan.duration}</p>
                 <p><strong>Amount:</strong> KSh ${selectedPlan.price}</p>
-                <p><strong>Status:</strong> <span style="color: var(--error);">Failed</span></p>
+                <p><strong>Status:</strong> <span style="color: var(--error);">Failed/Cancelled</span></p>
                 <p><strong>Time:</strong> ${new Date().toLocaleString('en-KE', { timeZone: 'Africa/Nairobi' })}</p>
+                <p><strong>Next Steps:</strong> Your account was not charged. You can try again or contact support.</p>
             `;
 
             statusContainer.innerHTML = '';
             errorModal.classList.add('active');
+        }
+
+        // Get user-friendly error messages
+        function getErrorMessage(resultCode) {
+            const errorMessages = {
+                '1': 'Payment was cancelled by user',
+                '2': 'Payment failed - insufficient funds',
+                '3': 'Payment failed - invalid phone number',
+                '4': 'Payment failed - account not active',
+                '5': 'Payment failed - transaction limit exceeded',
+                '1001': 'Payment failed - invalid phone number format',
+                '1019': 'Payment failed - transaction timeout',
+                '1032': 'Payment request cancelled by user',
+                '1037': 'Payment failed - cannot receive funds',
+                '9999': 'Payment failed - system error'
+            };
+            
+            return errorMessages[resultCode] || 'Payment failed - please try again or contact support';
         }
 
         // Show status message
