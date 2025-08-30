@@ -610,12 +610,13 @@
     <script>
         // Configuration - LIVE MODE
         const MPESA_CONFIG = {
-            consumerKey: 'nLuyXezRJgm3fpxYDCjQE1vxLo4cz4Y9tSV3tdZAhjRl7pGT',
-            consumerSecret: '7LrWGPDLkLg7FPcJHgq8OZjVEoE1AnuLEUzq6TTX6nBw3TxqNf9qz6dPnqm3udRa',
+            // IMPORTANT: Replace these with your actual live credentials from Safaricom Developer Portal
+            consumerKey: 'YOUR_LIVE_CONSUMER_KEY', // Get from Safaricom Developer Portal
+            consumerSecret: 'YOUR_LIVE_CONSUMER_SECRET', // Get from Safaricom Developer Portal
             environment: 'live', // Using live/production environment
-            shortCode: '4079157', // Live till number - update with your actual live till number
-            passkey: 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919', // Live passkey - update with your actual live passkey
-            callbackURL: 'https://your-live-domain.com/callback' // Update with your actual callback URL
+            shortCode: 'YOUR_LIVE_SHORTCODE', // Your actual live paybill/till number
+            passkey: 'YOUR_LIVE_PASSKEY', // Your actual live passkey from Safaricom
+            callbackURL: 'https://your-actual-domain.com/mpesa/callback' // Your actual callback URL
         };
 
         // WiFi Plans Data
